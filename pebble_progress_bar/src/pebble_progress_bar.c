@@ -43,11 +43,17 @@ void bars_layer_update(Layer *me, GContext *ctx) {
   }, 0, 0);
 
   graphics_context_set_fill_color(ctx, GColorBlack);
-  for(int h = 0; h <= current_time.tm_hour % HOUR_MODULUS; h += HOURS_PER_TICKMARK) {
-    int row = h / (HOURS_PER_TICKMARK * HOUR_TICKS_PER_ROW);
-    int col = h % HOUR_TICKS_PER_ROW;
-    int x = col * PIXELS_PER_HOUR;
-    int y = row * PIXELS_PER_ROW;
+
+  int row;
+  int col;
+  int x;
+  int y;
+
+  for(int h = 0; h < current_time.tm_hour % HOUR_MODULUS; h += HOURS_PER_TICKMARK) {
+    row = h / (HOURS_PER_TICKMARK * HOUR_TICKS_PER_ROW);
+    col = h % HOUR_TICKS_PER_ROW;
+    x   = col * PIXELS_PER_HOUR;
+    y   = row * PIXELS_PER_ROW;
 
     graphics_fill_rect(ctx, (GRect){
       .origin = {
@@ -55,16 +61,17 @@ void bars_layer_update(Layer *me, GContext *ctx) {
         .y = y
       },
       .size = {
-        .w = (SCREEN_WIDTH / HOUR_TICKS_PER_ROW) - HOUR_BORDER_WIDTH,
+        .w = PIXELS_PER_HOUR - HOUR_BORDER_WIDTH,
         .h = PIXELS_PER_ROW - HOUR_BORDER_WIDTH
       }
     }, 0, 0);
   }
-  for(int m = 0; m <= current_time.tm_min; m += MINUTES_PER_TICKMARK) {
-    int row = m / (MINUTES_PER_TICKMARK * MINUTE_TICKS_PER_ROW);
-    int col = m % MINUTE_TICKS_PER_ROW;
-    int x = col * PIXELS_PER_MINUTE;
-    int y = ((HOUR_MODULUS / HOUR_TICKS_PER_ROW) + row) * PIXELS_PER_ROW;
+
+  for(int m = 0; m < current_time.tm_min; m += MINUTES_PER_TICKMARK) {
+    row = m / (MINUTES_PER_TICKMARK * MINUTE_TICKS_PER_ROW);
+    col = m % MINUTE_TICKS_PER_ROW;
+    x   = col * PIXELS_PER_MINUTE;
+    y   = (HOUR_MODULUS / HOUR_TICKS_PER_ROW + row) * PIXELS_PER_ROW;
 
     graphics_fill_rect(ctx, (GRect){
       .origin = {
@@ -72,7 +79,7 @@ void bars_layer_update(Layer *me, GContext *ctx) {
         .y = y
       },
       .size = {
-        .w = (SCREEN_WIDTH / MINUTE_TICKS_PER_ROW) - MINUTE_BORDER_WIDTH,
+        .w = PIXELS_PER_MINUTE - MINUTE_BORDER_WIDTH,
         .h = PIXELS_PER_ROW - MINUTE_BORDER_WIDTH
       }
     }, 0, 0);
