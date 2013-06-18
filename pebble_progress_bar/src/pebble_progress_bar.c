@@ -17,29 +17,88 @@ PBL_APP_INFO(MY_UUID,
 
 Window window;
 AppContextRef myContext;
-Layer tickmarks_layer;
+InverterLayer tickmarks_layer;
 Layer bars_layer;
-
-
+PblTm current_time;
 
 /*** Layer update callbacks **************************************************/
 
 void tickmarks_layer_update(Layer *me, GContext *ctx) {
-  // Draw hour ticks
-  graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-  graphics_context_set_stroke_color(ctx, GColorBlack);
-  for(unsigned short h = 0; h <= 12; ++h) {
-    unsigned short x = HOURS_MIN_WIDTH + h * (HOURS_WIDTH / 12);
-    graphics_draw_line(ctx, (GPoint){.x = x, .y = 0}, (GPoint){.x = x, .y = 71});
-  }
-  // Draw minute ticks
-  for(unsigned short m = 0; m <= 60; ++m) {
-    unsigned short x = MINUTES_MIN_WIDTH + m * (MINUTES_WIDTH / 60);
-    graphics_draw_line(ctx, (GPoint){.x = x, .y = 0}, (GPoint){.x = x, .y = 71});
-  }
+/*
+ *   graphics_context_set_fill_color(ctx, GColorWhite);
+ * 
+ *   get_time(&current_time);
+ * 
+ *   for(int h = 0; h < HOUR_MODULUS; h += HOURS_PER_TICKMARK) {
+ *     int row = h / HOURS_PER_ROW;
+ *     int col = h % HOURS_PER_ROW;
+ *     int x = col * PIXELS_PER_HOUR;
+ *     int y = row * PIXELS_PER_ROW;
+ * 
+ *     graphics_fill_rect(ctx, (GRect){
+ *       .origin = (GPoint){
+ *         .x = x,
+ *         .y = y
+ *       },
+ *       .size = (GSize){
+ *         .w = HOUR_TICKMARK_WIDTH,
+ *         .h = PIXELS_PER_ROW
+ *       }
+ *     }, 0, 0);
+ *   }
+ */
 }
 
-void bars_layer_update() {
+void bars_layer_update(Layer *me, GContext *ctx) {
+  get_time(&current_time);
+
+  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_fill_rect(ctx, (GRect){
+    .origin = {
+      .x = 0,
+      .y = 0
+    },
+    .size = {
+      .w = SCREEN_WIDTH,
+      .h = SCREEN_HEIGHT
+    }
+  }, 0, 0);
+
+  graphics_context_set_fill_color(ctx, GColorBlack);
+  for(int h = 0; h < current_time.tm_hour % HOUR_MODULUS; h += HOURS_PER_TICKMARK) {
+    int row = h / HOURS_PER_ROW;
+    int col = h % HOURS_PER_ROW;
+    int x = col * PIXELS_PER_HOUR;
+    int y = row * PIXELS_PER_ROW;
+
+    graphics_fill_rect(ctx, (GRect){
+      .origin = {
+        .x = x,
+        .y = y
+      },
+      .size = {
+        .w = PIXELS_PER_HOUR - HOUR_TICKMARK_WIDTH,
+        .h = PIXELS_PER_ROW - HOUR_TICKMARK_WIDTH
+      }
+    }, 0, 0);
+  }
+  for(int m = 0; m < current_time.tm_min; m += MINUTES_PER_TICKMARK) {
+    int row = m / MINUTES_PER_ROW;
+    int col = m % MINUTES_PER_ROW;
+    int x = col * PIXELS_PER_MINUTE;
+    int y = ((HOUR_MODULUS / HOURS_PER_ROW) + row) * PIXELS_PER_ROW;
+
+    graphics_fill_rect(ctx, (GRect){
+      .origin = {
+        .x = x,
+        .y = y
+      },
+      .size = {
+        .w = (MINUTES_PER_TICKMARK * PIXELS_PER_MINUTE) - MINUTE_TICKMARK_WIDTH,
+        .h = PIXELS_PER_ROW - MINUTE_TICKMARK_WIDTH
+      }
+    }, 0, 0);
+  }
 }
 
 
@@ -55,15 +114,15 @@ void handle_init(AppContextRef ctx) {
   window_init(&window, "Progress Bar");
   window_stack_push(&window, true /* Animated */);
 
-  layer_init(&tickmarks_layer, window.layer.frame);
-  tickmarks_layer.update_proc = &tickmarks_layer_update;
-  layer_add_child(&window.layer, &tickmarks_layer);
+  inverter_layer_init(&tickmarks_layer, window.layer.frame);
+  layer_set_update_proc((Layer*)&tickmarks_layer, &tickmarks_layer_update);
+  layer_add_child(&window.layer, (Layer*)&tickmarks_layer);
 
   layer_init(&bars_layer, window.layer.frame);
   bars_layer.update_proc = &bars_layer_update;
-  layer_add_child(&window.layer, &bars_layer);
+  layer_insert_below_sibling(&bars_layer, (Layer*)&tickmarks_layer);
 
-  layer_mark_dirty(&tickmarks_layer);
+  layer_mark_dirty((Layer*)&tickmarks_layer);
 }
 
 void handle_tick(AppContextRef ctx, PebbleTickEvent *event) {
