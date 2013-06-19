@@ -8,7 +8,7 @@
 
 // Constants ------------------------------------------------------------------
 
-#define SCREEN_WIDTH  144
+#define SCREEN_WIDTH  140
 #define SCREEN_HEIGHT 168
 
 
@@ -22,7 +22,7 @@
 #define MINUTES_PER_TICKMARK 1
 #define MINUTE_TICKS_PER_ROW 20
 #define MINUTE_BORDER_WIDTH  1
-#define PIXELS_PER_MINUTE    ((SCREEN_WIDTH / MINUTE_TICKS_PER_ROW)+1)
+#define PIXELS_PER_MINUTE    (SCREEN_WIDTH / MINUTE_TICKS_PER_ROW)
 
 #define HOUR_MODULUS         12
 #define PIXELS_PER_ROW       (SCREEN_HEIGHT/(HOUR_MODULUS/HOUR_TICKS_PER_ROW + 60/MINUTE_TICKS_PER_ROW))
